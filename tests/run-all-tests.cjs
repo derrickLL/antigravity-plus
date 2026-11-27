@@ -1137,6 +1137,359 @@ async function runTests() {
             }
         });
 
+        await step('11b. ui-core v10: foreground permission options with persistSuggestionType=1 and post-submit stability', async () => {
+            const origWin = global.window;
+            const origDoc = global.document;
+            const origLoc = global.location;
+            const origMut = global.MutationObserver;
+            const origIw = global.innerWidth;
+            const origIh = global.innerHeight;
+            try {
+                function matchNode(node, sel) {
+                    if (!node || !sel) return false;
+                    const tagOnly = /^[a-z]+$/i.test(sel);
+                    if (tagOnly) return node.tagName === sel.toUpperCase();
+                    if (sel.startsWith('#')) return node.id === sel.slice(1);
+                    if (sel.startsWith('.')) return String(node.className || '').split(/\s+/).includes(sel.slice(1));
+                    const mAttrVal = /^\[([a-z0-9_-]+)="([^"]+)"\]$/i.exec(sel);
+                    if (mAttrVal) {
+                        const k = mAttrVal[1];
+                        const expected = mAttrVal[2];
+                        if (k === 'data-testid' && node.dataset?.testid === expected) return true;
+                        return node.getAttribute(k) === expected;
+                    }
+                    const mAttrPresent = /^\[([a-z0-9_-]+)\]$/i.exec(sel);
+                    if (mAttrPresent) return node.getAttribute(mAttrPresent[1]) !== null;
+                    return false;
+                }
+                function queryNodes(root, sel) {
+                    if (sel === '[data-testid="agent-input-box"] [data-testid="permissions-selector-trigger"]') {
+                        const ib = queryNodes(root, '[data-testid="agent-input-box"]')[0];
+                        return ib ? queryNodes(ib, '[data-testid="permissions-selector-trigger"]') : [];
+                    }
+                    const out = [];
+                    const walk = cur => {
+                        for (const ch of cur.children || []) {
+                            if (matchNode(ch, sel)) out.push(ch);
+                            walk(ch);
+                        }
+                    };
+                    walk(root);
+                    return out;
+                }
+                function makeNode(tag, init = {}) {
+                    const attrs = new Map();
+                    const node = {
+                        tagName: String(tag || 'div').toUpperCase(),
+                        id: init.id || '',
+                        className: init.className || '',
+                        hidden: Boolean(init.hidden),
+                        value: init.value,
+                        disabled: Boolean(init.disabled),
+                        textContent: init.textContent || '',
+                        dataset: { ...(init.dataset || {}) },
+                        children: [],
+                        parentNode: null,
+                        parentElement: null,
+                        isConnected: Boolean(init.isConnected),
+                        style: { setProperty() {}, getPropertyValue() { return ''; } },
+                        setAttribute(k, v) { attrs.set(k, String(v)); },
+                        getAttribute(k) { return attrs.has(k) ? attrs.get(k) : null; },
+                        removeAttribute(k) { attrs.delete(k); },
+                        addEventListener() {},
+                        removeEventListener() {},
+                        getClientRects() { return this.hidden ? [] : [{ width: 320, height: 120 }]; },
+                        getBoundingClientRect() { return { left: 400, right: 428, top: 700, bottom: 728, width: 28, height: 28 }; },
+                        append(...items) {
+                            for (const it of items) {
+                                if (!it) continue;
+                                if (it.parentNode) it.remove();
+                                it.parentNode = this;
+                                it.parentElement = this;
+                                this.children.push(it);
+                            }
+                        },
+                        prepend(it) {
+                            if (!it) return;
+                            if (it.parentNode) it.remove();
+                            it.parentNode = this;
+                            it.parentElement = this;
+                            this.children.unshift(it);
+                        },
+                        before(it) {
+                            if (!it || !this.parentNode) return;
+                            if (it.parentNode) it.remove();
+                            const sibs = this.parentNode.children;
+                            const idx = sibs.indexOf(this);
+                            it.parentNode = this.parentNode;
+                            it.parentElement = this.parentNode;
+                            sibs.splice(Math.max(0, idx), 0, it);
+                        },
+                        replaceChildren(...items) { this.children = []; this.append(...items); },
+                        remove() {
+                            if (!this.parentNode) return;
+                            const sibs = this.parentNode.children;
+                            const idx = sibs.indexOf(this);
+                            if (idx >= 0) sibs.splice(idx, 1);
+                            this.parentNode = null;
+                            this.parentElement = null;
+                        },
+                        get previousElementSibling() {
+                            if (!this.parentNode) return null;
+                            const sibs = this.parentNode.children;
+                            const idx = sibs.indexOf(this);
+                            return idx > 0 ? sibs[idx - 1] : null;
+                        },
+                        get firstElementChild() { return this.children[0] || null; },
+                        contains(t) {
+                            let cur = t;
+                            while (cur) { if (cur === this) return true; cur = cur.parentNode; }
+                            return false;
+                        },
+                        closest(sel) {
+                            let cur = this;
+                            while (cur) { if (matchNode(cur, sel)) return cur; cur = cur.parentNode; }
+                            return null;
+                        },
+                        querySelector(sel) { return queryNodes(this, sel)[0] || null; },
+                        querySelectorAll(sel) { return queryNodes(this, sel); }
+                    };
+                    let rawHtml = '';
+                    Object.defineProperty(node, 'innerHTML', {
+                        get() { return rawHtml; },
+                        set(val) {
+                            rawHtml = String(val);
+                            if (rawHtml.includes('agy-plus-quota-split-ring')) {
+                                const ring = makeNode('span', { className: 'agy-plus-quota-ring agy-plus-quota-split-ring' });
+                                const arc5h = makeNode('path'); arc5h.setAttribute('data-arc', '5h');
+                                const arcWk = makeNode('path'); arcWk.setAttribute('data-arc', 'weekly');
+                                ring.append(arc5h, arcWk);
+                                node.replaceChildren(ring);
+                            } else if (rawHtml.includes('agy-plus-quota-ring')) {
+                                node.replaceChildren(makeNode('span', { className: 'agy-plus-quota-ring' }));
+                            }
+                        }
+                    });
+                    return node;
+                }
+
+                const docEl = makeNode('html', { isConnected: true });
+                const head = makeNode('head', { isConnected: true });
+                const body = makeNode('body', { isConnected: true });
+                const classes = new Set();
+                body.classList = { add(...c) { c.forEach(x => classes.add(x)); }, remove(...c) { c.forEach(x => classes.delete(x)); }, contains: x => classes.has(x) };
+
+                const nativeCalls = [];
+                let stepsInSlice = [];
+                const agentState = {
+                    trajectorySlice: {
+                        trajectoryId: 'traj-perm-1',
+                        stepsSlice: { startIndex: 0 },
+                        totalStepsLength: 2,
+                        get stepsInSlice() { return stepsInSlice; }
+                    }
+                };
+                const convId = 'conv-perm-1';
+                const statesMap = new Map([[convId, { provider: { getState: () => agentState } }]]);
+                const summariesRoot = { summaries: { [convId]: { summary: 'Push Repo Updates' } }, indexes: {} };
+                const inputBox = makeNode('div', { dataset: { testid: 'agent-input-box' } });
+                inputBox.append(makeNode('button', { dataset: { testid: 'permissions-selector-trigger' } }));
+                inputBox.__reactFiber$perm = {
+                    memoizedProps: {
+                        value: {
+                            conversationId: convId,
+                            getAgentStates: () => statesMap,
+                            handleCascadeUserInteraction: (cascadeId, payload) => {
+                                nativeCalls.push({ cascadeId, payload });
+                                return { ok: true };
+                            },
+                            get: name => (name === 'rawCommandDetails' ? { isEnabled: true } : null),
+                            getBaseline: () => null
+                        },
+                        store: { getState: () => ({ trajectorySummaries: summariesRoot }) }
+                    },
+                    return: null
+                };
+                body.append(makeNode('aside', { className: 'bg-sidebar' }), inputBox);
+
+                global.innerWidth = 1280;
+                global.innerHeight = 800;
+                global.location = { hostname: '127.0.0.1', pathname: `/c/${convId}`, origin: 'https://127.0.0.1' };
+                global.MutationObserver = class { observe() {} disconnect() {} };
+                global.document = {
+                    documentElement: docEl,
+                    head,
+                    body,
+                    hasFocus: () => true,
+                    createElement: tag => makeNode(tag),
+                    querySelector: sel => queryNodes(body, sel)[0] || null,
+                    querySelectorAll: sel => (sel.includes(':is(') || sel.includes('[style*=') || sel === 'a[href]' ? [] : queryNodes(body, sel)),
+                    addEventListener() {},
+                    removeEventListener() {}
+                };
+                global.window = {
+                    location: global.location,
+                    crypto: crypto.webcrypto,
+                    nativeStorage: { getItems: async () => ({}), updateItems: async () => {} },
+                    setTimeout,
+                    clearTimeout,
+                    setInterval: () => 998,
+                    clearInterval: () => {},
+                    addEventListener: () => {},
+                    removeEventListener: () => {}
+                };
+
+                installAgyPlusUI({ themeCss: '', widgetsCss: '', config: { features: { contextRing: false }, onboarding: { tourCompleted: true } } });
+
+                let activeCard = null;
+                function mountNativeCard(spec, editorText, optionTexts) {
+                    if (activeCard) activeCard.remove();
+                    const card = makeNode('div', { dataset: { testid: 'interaction-takeover-card' } });
+                    card.__reactFiber$card = {
+                        memoizedProps: {
+                            cascadeId: convId,
+                            trajectoryId: 'traj-perm-1',
+                            stepIndex: 10,
+                            permissionSpec: spec
+                        },
+                        return: null
+                    };
+                    if (editorText !== null) {
+                        card.append(makeNode('textarea', {
+                            dataset: { testid: 'permission-target-editor' },
+                            value: editorText
+                        }));
+                    }
+                    for (const txt of optionTexts) {
+                        const opt = makeNode('label', { dataset: { testid: 'ask-question-option' } });
+                        opt.append(makeNode('input'), makeNode('div', { dataset: { testid: 'ask-question-option-text' }, textContent: txt }));
+                        card.append(opt);
+                    }
+                    card.append(makeNode('button', { dataset: { testid: 'interaction-skip-button' } }));
+                    body.append(card);
+                    activeCard = card;
+                }
+
+                // 1) Regression: persistSuggestionType=1 with suggestedPersistPattern must format real command/pattern (never 'true')
+                //    so mounted foreground takeover cards keep Submit options instead of triggering native_options_mismatch.
+                const pushCmd = 'git -C C:\\repo\\app push origin main';
+                const cmdSpec = {
+                    resource: { action: 'command', target: pushCmd },
+                    persistSuggestionType: 1,
+                    suggestedPersistPattern: 'git -C C:\\repo\\app push',
+                    reason: 'Pushing to origin main',
+                    actionDescription: 'Push repository updates'
+                };
+                stepsInSlice = [{
+                    status: 9,
+                    step: { case: 'generic', value: {} },
+                    requestedInteraction: { interaction: { case: 'permission', value: cmdSpec } },
+                    metadata: {
+                        createdAt: { seconds: '1700000100' },
+                        sourceTrajectoryStepInfo: { trajectoryId: 'traj-perm-1', stepIndex: 10 },
+                        toolCall: { id: 'call-push-1', name: 'run_command', argumentsJson: JSON.stringify({ CommandLine: pushCmd }) }
+                    }
+                }];
+                mountNativeCard(cmdSpec, pushCmd, [
+                    'Yes, allow this time',
+                    "Yes, and always allow 'git -C C:\\repo\\app push' in this conversation",
+                    "Yes, and always allow 'git -C C:\\repo\\app push'"
+                ]);
+
+                const fgSync = await global.window.__agyPlusUI.syncToastState();
+                assert.equal(global.window.__agyPlusUI.status().approvalDiag.lastPermissionDiag.status, 'ok');
+                assert.equal(global.window.__agyPlusUI.status().approvalDiag.lastPermissionDiag.nativeMatched, 3);
+                const fgCard = fgSync.completed[0];
+                assert.equal(fgCard.questions.length, 1, 'Foreground takeover card must keep Submit questions');
+                assert.deepEqual(fgCard.questions[0].options, [
+                    'Yes, allow this time',
+                    "Yes, and always allow 'git -C C:\\repo\\app push' in this conversation",
+                    "Yes, and always allow 'git -C C:\\repo\\app push'",
+                    'No (deny this request)'
+                ]);
+
+                // 2) Simulating optimistic card unmount before trueState leaves WAITING must produce identical approval options & key.
+                activeCard.remove();
+                activeCard = null;
+                const optSync = await global.window.__agyPlusUI.syncToastState();
+                assert.equal(global.window.__agyPlusUI.status().approvalDiag.lastPermissionDiag.nativeMatched, 0);
+                assert.equal(optSync.completed[0].questions[0].nativeApprovalKey, fgCard.questions[0].nativeApprovalKey);
+                assert.deepEqual(optSync.completed[0].questions[0].options, fgCard.questions[0].options);
+
+                // 3) Edited target overrides suggestedPersistPattern and updates submitted payload cleanly.
+                const editedCmd = 'git -C C:\\repo\\app push origin main --dry-run';
+                mountNativeCard(cmdSpec, editedCmd, [
+                    'Yes, allow this time',
+                    `Yes, and always allow '${editedCmd}' in this conversation`,
+                    `Yes, and always allow '${editedCmd}'`
+                ]);
+                const editSync = await global.window.__agyPlusUI.syncToastState();
+                const editCard = editSync.completed[0];
+                assert.equal(editCard.questions.length, 1);
+                assert.deepEqual(editCard.questions[0].options, [
+                    'Yes, allow this time',
+                    `Yes, and always allow '${editedCmd}' in this conversation`,
+                    `Yes, and always allow '${editedCmd}'`,
+                    'No (deny this request)'
+                ]);
+                const editSubmit = await global.window.__agyPlusUI.submitAskQuestion(convId, [{
+                    kind: 'native_permission',
+                    key: editCard.questions[0].nativeApprovalKey,
+                    requestKey: editCard.turnKey,
+                    optionIndex: 1,
+                    deny: false
+                }]);
+                assert.equal(editSubmit.submitted, true);
+                assert.equal(nativeCalls[0].payload.interaction.value.editedTarget, editedCmd);
+                assert.deepEqual(nativeCalls[0].payload.interaction.value.persistGrants.allow, [`command(${editedCmd})`]);
+
+                // 4) Auto-expanded truncated target with isUnedited=true still preserves suggestedPersistPattern.
+                const truncSpec = {
+                    resource: { action: 'command', target: 'gh repo create ...' },
+                    persistSuggestionType: 1,
+                    suggestedPersistPattern: 'gh repo create'
+                };
+                stepsInSlice = [{
+                    status: 9,
+                    step: { case: 'generic', value: {} },
+                    requestedInteraction: { interaction: { case: 'permission', value: truncSpec } },
+                    metadata: {
+                        createdAt: { seconds: '1700000200' },
+                        sourceTrajectoryStepInfo: { trajectoryId: 'traj-perm-1', stepIndex: 10 },
+                        toolCall: { id: 'call-gh-1', name: 'run_command', argumentsJson: JSON.stringify({ CommandLine: 'gh repo create derrickLL/demo --public' }) }
+                    }
+                }];
+                mountNativeCard(truncSpec, 'gh repo create ...', [
+                    'Yes, allow this time',
+                    "Yes, and always allow 'gh repo create' in this conversation",
+                    "Yes, and always allow 'gh repo create'"
+                ]);
+                const truncSync = await global.window.__agyPlusUI.syncToastState();
+                assert.equal(global.window.__agyPlusUI.status().approvalDiag.lastPermissionDiag.status, 'ok');
+                const truncCard = truncSync.completed[0];
+                assert.equal(truncCard.questions.length, 1);
+                const truncSubmit = await global.window.__agyPlusUI.submitAskQuestion(convId, [{
+                    kind: 'native_permission',
+                    key: truncCard.questions[0].nativeApprovalKey,
+                    requestKey: truncCard.turnKey,
+                    optionIndex: 2,
+                    deny: false
+                }]);
+                assert.equal(truncSubmit.submitted, true);
+                assert.equal(nativeCalls[1].payload.interaction.value.editedTarget, undefined);
+                assert.deepEqual(nativeCalls[1].payload.interaction.value.persistGrants.allow, ['command(gh repo create)']);
+
+                global.window.__agyPlusUI.dispose();
+            } finally {
+                global.window = origWin;
+                global.document = origDoc;
+                global.location = origLoc;
+                global.MutationObserver = origMut;
+                global.innerWidth = origIw;
+                global.innerHeight = origIh;
+            }
+        });
+
         await step('12. thought-localization v7 & navigation-gestures v2: live toggles and route history', async () => {
             const origWin = global.window;
             const origDoc = global.document;

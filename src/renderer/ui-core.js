@@ -1181,7 +1181,7 @@ function installAgyPlusUI(initOptions) {
         })).filter(o => o.text.trim() && o.input);
     }
 
-    function backgroundApprovalOptions(waiting, target, rawCommandDetails, pluginGrant) {
+    function backgroundApprovalOptions(waiting, target, rawCommandDetails, pluginGrant, isEdited) {
         const spec = waiting.interaction.value || {};
         const action = spec.resource?.action || '';
         const saveRule = waiting.toolName === 'ask_permission' || waiting.toolName === 'ask_custom_permission';
@@ -1192,8 +1192,8 @@ function installAgyPlusUI(initOptions) {
         const scopes = Array.isArray(spec.approvalScopeFilter) ? spec.approvalScopeFilter : [];
         const onceOnlyDownload = isDownloadUrl && scopes.length > 0 && scopes.every(s => s === approvalScopes.once);
         const urlTarget = isExecUrl || isDownloadUrl ? target : '';
-        const edited = target !== spec.resource.target;
-        const suggested = spec.persistSuggestionType === 1 && spec.suggestedPersistPattern && !edited;
+        const edited = typeof isEdited === 'boolean' ? isEdited : target !== spec.resource.target;
+        const suggested = spec.persistSuggestionType === 1 && !edited ? fullText(spec.suggestedPersistPattern) : '';
         const command = action === 'command' || action === 'unsandboxed';
         const rule = !command || rawCommandDetails ? (suggested || (edited ? target : '')) : '';
         const limited = spec.triggerSource?.type === 6 ||
@@ -1309,7 +1309,7 @@ function installAgyPlusUI(initOptions) {
         }
 
         const rawCommandDetails = ctx.features?.get('rawCommandDetails')?.isEnabled ?? true;
-        const choices = backgroundApprovalOptions(waiting, displayedTarget, rawCommandDetails, pluginGrant);
+        const choices = backgroundApprovalOptions(waiting, displayedTarget, rawCommandDetails, pluginGrant, !isUnedited);
         const normOpt = text => fullText(text).replace(/\s+/g, ' ').trim();
         const nativeOptions = card ? readNativeOptions(card) : [];
         if (nativeOptions.length && (nativeOptions.length !== choices.length ||
