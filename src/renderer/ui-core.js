@@ -49,6 +49,9 @@ function installAgyPlusUI(initOptions) {
             translation: {
                 mode: ['hybrid', 'online', 'offline'].includes(rawMode) ? rawMode : 'hybrid',
                 offlineRoot: String(src.translation?.offlineRoot || '')
+            },
+            onboarding: {
+                tourCompleted: Boolean(src.onboarding?.tourCompleted)
             }
         };
     }
@@ -387,6 +390,9 @@ function installAgyPlusUI(initOptions) {
         if (patch.translation) {
             currentConfig.translation = { ...currentConfig.translation, ...patch.translation };
         }
+        if (patch.onboarding) {
+            currentConfig.onboarding = { ...currentConfig.onboarding, ...patch.onboarding };
+        }
         applyConfigInternal(currentConfig, currentRuntimeMeta, true);
 
         try {
@@ -523,6 +529,13 @@ function installAgyPlusUI(initOptions) {
         }
 
         const footer = element('div', 'agy-plus-settings-footer');
+        const replayTourBtn = element('button', 'agy-plus-action-link', '功能导览');
+        replayTourBtn.type = 'button';
+        replayTourBtn.dataset.testid = 'agy-plus-replay-tour';
+        replayTourBtn.addEventListener('click', () => {
+            startTour(0, { auto: false });
+        });
+
         const enableAllBtn = element('button', 'agy-plus-action-link', '全部开启');
         enableAllBtn.type = 'button';
         enableAllBtn.dataset.testid = 'agy-plus-enable-all';
@@ -541,7 +554,7 @@ function installAgyPlusUI(initOptions) {
             emitConfigPatch({ features: allOff });
         });
 
-        footer.append(enableAllBtn, disableAllBtn);
+        footer.append(replayTourBtn, enableAllBtn, disableAllBtn);
         nodes.push(footer);
 
         settingsPanel.replaceChildren(...nodes);
@@ -615,6 +628,10 @@ function installAgyPlusUI(initOptions) {
                 f.newWindowMenu !== false ? 'true' : 'false'
             );
             try { globalThis.__agyPlusMenuController?.sync?.(); } catch {}
+        }
+
+        if (currentConfig.onboarding?.tourCompleted && tourActive && tourOpenedAutomatically) {
+            stopTour({ markCompleted: false });
         }
 
         renderSettingsPanel();
@@ -1968,8 +1985,397 @@ function installAgyPlusUI(initOptions) {
         }, HOVER_CLOSE_DELAY_MS);
     }
 
+    // ---- Interactive Step-by-Step Onboarding Tour ----
+
+    const TOUR_STORAGE_KEY = 'agy_plus_tour_completed_v1';
+    const TOUR_STEPS = [
+        {
+            id: 'control-center',
+            title: '欢迎使用 Antigravity Plus',
+            desc: '全部 15 项增强功能均可在这里随时独立开关（0ms 实时生效，无需重启）。平时也可通过顶部 Window 菜单或快捷键 Ctrl+Shift+, 打开设置面板。',
+            selectors: ['[data-testid="agy-plus-settings-button"]'],
+            mode: 'first',
+            fallbackHint: '提示：侧边栏左下角的调节滑块图标会常驻保留，随时可点击打开控制中心。',
+            preferredSide: 'right'
+        },
+        {
+            id: 'quota-ring',
+            title: '5 小时 / 周高对比双半环配额',
+            desc: '上半环显示 5 小时剩余额度，下半环显示周剩余额度。鼠标悬停对应半环即可查看重置倒计时，点击可展开完整额度面板。',
+            selectors: ['[data-testid="agy-plus-quota-indicator"]'],
+            mode: 'first',
+            fallbackHint: '提示：若你已关闭双半环配额开关，可在设置面板随时重新开启。',
+            preferredSide: 'right'
+        },
+        {
+            id: 'context-and-perf',
+            title: '实时速率胶囊与上下文三色圆环',
+            desc: '左侧胶囊实时追踪阶段耗时与 Avg tok/s 输出速率；右侧圆环随上下文占比自动变绿 / 橙 / 红（0–59% / 60–79% / ≥80%），悬停即可预览明细，点击可固定面板。',
+            selectors: ['[data-testid="agy-plus-performance-indicator"]', '[data-testid="agy-plus-context-pending"]'],
+            mode: 'union',
+            fallbackHint: '提示：打开任意对话输入框后，这两项微件会自动显示在输入框右下角。',
+            preferredSide: 'top'
+        },
+        {
+            id: 'default-model',
+            title: '新对话自动锁定最高旗舰模型',
+            desc: '创建空白新对话时自动选定最高阶旗舰模型与最高推理档位；若你在当前对话中手动切换其他模型，当次会话绝不强行覆盖。',
+            selectors: ['[data-testid="model-selector-trigger"]'],
+            mode: 'first',
+            fallbackHint: '提示：可在输入框左下角模型选择器位置看到自动切换效果。',
+            preferredSide: 'top'
+        },
+        {
+            id: 'translation',
+            title: 'Thinking 思考与会话标题流式中文化',
+            desc: '自动将英文思考过程与侧边栏会话标题实时译为简体中文，完整保护代码路径与命令参数字面量；展开思考块时可随时点击「Show original」对照原文。',
+            selectors: ['[data-testid="thinking-collapsible-trigger"]', '[data-testid="sidebar-navigation-items"]'],
+            mode: 'first',
+            fallbackHint: '提示：支持在设置面板即时切换「混合加速 / 仅在线 / 仅离线」三种翻译模式。',
+            preferredSide: 'right'
+        },
+        {
+            id: 'window-and-gestures',
+            title: 'Window 多窗口与右键四向手势',
+            desc: '在顶部 Window 菜单或按 Ctrl+Shift+N 可新建独立窗口；在界面中按住鼠标右键向 ← / → / ↑ / ↓ 拖拽（或按鼠标侧键）可快速返回、前进、回顶或到底，按 Esc 取消不误弹菜单。',
+            selectors: ['[data-testid="title-menu-bar"]'],
+            mode: 'first',
+            fallbackHint: '提示：右键手势与侧键导航均支持在控制中心独立开关。',
+            preferredSide: 'bottom'
+        },
+        {
+            id: 'toast-center',
+            title: '右下角无抢焦原生交互弹窗',
+            desc: '当你切到其他软件处理工作时，任务完成提醒、单选/多选问答与命令权限审批都会在桌面右下角弹出原生卡片，支持直接提交审批或点击跳回原窗口。',
+            selectors: [],
+            mode: 'none',
+            anchorCorner: 'bottom-right',
+            fallbackHint: '提示：随时可在左下角设置面板点击「功能导览」或运行 Manage.cmd tour 重新查看本向导。'
+        }
+    ];
+
+    const tourBackdrop = element('div', 'agy-plus-tour-backdrop');
+    tourBackdrop.dataset.testid = 'agy-plus-tour-backdrop';
+    tourBackdrop.hidden = true;
+
+    const tourClickShield = element('div', 'agy-plus-tour-click-shield');
+    tourClickShield.hidden = true;
+
+    const tourSpotlight = element('div', 'agy-plus-tour-spotlight');
+    tourSpotlight.dataset.testid = 'agy-plus-tour-spotlight';
+    tourSpotlight.hidden = true;
+
+    const tourCard = element('div', 'agy-plus-tour-card');
+    tourCard.id = 'agy-plus-tour-card';
+    tourCard.dataset.testid = 'agy-plus-tour-card';
+    tourCard.setAttribute('role', 'dialog');
+    tourCard.setAttribute('aria-modal', 'true');
+    tourCard.setAttribute('aria-label', 'Antigravity Plus 功能导览');
+    tourCard.hidden = true;
+
+    document.body.append(tourBackdrop, tourClickShield, tourSpotlight, tourCard);
+
+    let tourActive = false;
+    let tourStepIndex = 0;
+    let tourOpenedAutomatically = false;
+    let autoTourTimer = 0;
+
+    function readLocalTourCompleted() {
+        try {
+            return window.localStorage?.getItem?.(TOUR_STORAGE_KEY) === '1';
+        } catch {
+            return false;
+        }
+    }
+
+    function writeLocalTourCompleted() {
+        try {
+            window.localStorage?.setItem?.(TOUR_STORAGE_KEY, '1');
+        } catch {}
+    }
+
+    function isTourCompleted() {
+        return Boolean(currentConfig.onboarding?.tourCompleted) || readLocalTourCompleted();
+    }
+
+    function getVisibleRect(el) {
+        if (!el || !el.isConnected || el.hidden) return null;
+        try {
+            const r = el.getBoundingClientRect();
+            if (!r || r.width < 2 || r.height < 2) return null;
+            if (r.bottom < 0 || r.right < 0 || r.top > innerHeight || r.left > innerWidth) return null;
+            return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height };
+        } catch {
+            return null;
+        }
+    }
+
+    function resolveTourTargetRect(step) {
+        if (!step || !Array.isArray(step.selectors) || step.selectors.length === 0 || step.mode === 'none') {
+            return null;
+        }
+        if (step.mode === 'union') {
+            const rects = [];
+            for (const sel of step.selectors) {
+                const r = getVisibleRect(document.querySelector(sel));
+                if (r) rects.push(r);
+            }
+            if (!rects.length) return null;
+            const left = Math.min(...rects.map(r => r.left));
+            const top = Math.min(...rects.map(r => r.top));
+            const right = Math.max(...rects.map(r => r.right));
+            const bottom = Math.max(...rects.map(r => r.bottom));
+            return { left, top, right, bottom, width: right - left, height: bottom - top };
+        }
+        for (const sel of step.selectors) {
+            const r = getVisibleRect(document.querySelector(sel));
+            if (r) return r;
+        }
+        return null;
+    }
+
+    function positionTourCard(targetRect, step) {
+        const vw = Math.max(320, Number(window.innerWidth) || 1280);
+        const vh = Math.max(240, Number(window.innerHeight) || 760);
+        const cw = Math.min(372, vw - 24);
+        const ch = Math.max(170, tourCard.offsetHeight || 210);
+        const margin = 14;
+
+        if (!targetRect) {
+            if (step?.anchorCorner === 'bottom-right') {
+                tourCard.style.left = `${Math.max(margin, vw - cw - 24)}px`;
+                tourCard.style.top = `${Math.max(margin, vh - ch - 28)}px`;
+                return;
+            }
+            tourCard.style.left = `${Math.max(margin, Math.round((vw - cw) / 2))}px`;
+            tourCard.style.top = `${Math.max(margin, Math.round((vh - ch) / 2))}px`;
+            return;
+        }
+
+        const gap = 16;
+        const pad = 6;
+        const box = {
+            left: Math.max(6, targetRect.left - pad),
+            top: Math.max(6, targetRect.top - pad),
+            right: Math.min(vw - 6, targetRect.right + pad),
+            bottom: Math.min(vh - 6, targetRect.bottom + pad)
+        };
+
+        const spaceTop = box.top - margin;
+        const spaceBottom = vh - box.bottom - margin;
+        const spaceRight = vw - box.right - margin;
+        const spaceLeft = box.left - margin;
+
+        let side = step?.preferredSide || 'bottom';
+        const fits = s => {
+            if (s === 'top') return spaceTop >= ch + gap;
+            if (s === 'bottom') return spaceBottom >= ch + gap;
+            if (s === 'right') return spaceRight >= cw + gap;
+            if (s === 'left') return spaceLeft >= cw + gap;
+            return false;
+        };
+        if (!fits(side)) {
+            const order = ['top', 'bottom', 'right', 'left'];
+            const best = order.find(fits);
+            if (best) side = best;
+        }
+
+        let left = Math.round((vw - cw) / 2);
+        let top = Math.round((vh - ch) / 2);
+        if (side === 'top') {
+            left = box.left + ((box.right - box.left) - cw) / 2;
+            top = box.top - ch - gap;
+        } else if (side === 'bottom') {
+            left = box.left + ((box.right - box.left) - cw) / 2;
+            top = box.bottom + gap;
+        } else if (side === 'right') {
+            left = box.right + gap;
+            top = box.top + ((box.bottom - box.top) - ch) / 2;
+        } else if (side === 'left') {
+            left = box.left - cw - gap;
+            top = box.top + ((box.bottom - box.top) - ch) / 2;
+        }
+
+        left = Math.max(margin, Math.min(Math.round(left), vw - cw - margin));
+        top = Math.max(margin, Math.min(Math.round(top), vh - ch - margin));
+        tourCard.style.left = `${left}px`;
+        tourCard.style.top = `${top}px`;
+    }
+
+    function renderTourStep() {
+        if (!tourActive || disposed) return;
+        const step = TOUR_STEPS[tourStepIndex] || TOUR_STEPS[0];
+        const targetRect = resolveTourTargetRect(step);
+        const total = TOUR_STEPS.length;
+        const isFirst = tourStepIndex === 0;
+        const isLast = tourStepIndex === total - 1;
+
+        const header = element('div', 'agy-plus-tour-header');
+        header.append(element('span', 'agy-plus-tour-step-badge', `步骤 ${tourStepIndex + 1} / ${total}`));
+        const closeBtn = element('button', 'agy-plus-settings-close', '×');
+        closeBtn.type = 'button';
+        closeBtn.dataset.testid = 'agy-plus-tour-close';
+        closeBtn.setAttribute('aria-label', '跳过引导');
+        closeBtn.addEventListener('click', () => stopTour({ markCompleted: true }));
+        header.append(closeBtn);
+
+        const title = element('h3', 'agy-plus-tour-title', step.title);
+        const desc = element('p', 'agy-plus-tour-desc', step.desc);
+
+        const hintText = !targetRect && step.mode !== 'none'
+            ? (step.fallbackHint || '当前界面暂未显示该元素，可在对应场景下查看效果。')
+            : (step.mode === 'none' ? step.fallbackHint : '');
+        const hint = element('div', 'agy-plus-tour-hint', hintText);
+        if (!hintText) hint.hidden = true;
+
+        const footer = element('div', 'agy-plus-tour-footer');
+        const dots = element('div', 'agy-plus-tour-dots');
+        for (let i = 0; i < total; i++) {
+            const dot = element('span', 'agy-plus-tour-dot');
+            if (i === tourStepIndex) dot.dataset.active = 'true';
+            dots.append(dot);
+        }
+
+        const actions = element('div', 'agy-plus-tour-actions');
+        const skipBtn = element('button', 'agy-plus-tour-btn', '跳过');
+        skipBtn.type = 'button';
+        skipBtn.dataset.testid = 'agy-plus-tour-skip';
+        skipBtn.addEventListener('click', () => stopTour({ markCompleted: true }));
+
+        const prevBtn = element('button', 'agy-plus-tour-btn', '上一步');
+        prevBtn.type = 'button';
+        prevBtn.dataset.testid = 'agy-plus-tour-prev';
+        if (isFirst) prevBtn.hidden = true;
+        prevBtn.addEventListener('click', prevTourStep);
+
+        const nextBtn = element('button', 'agy-plus-tour-btn agy-plus-tour-btn-primary', isLast ? '完成导览' : '下一步');
+        nextBtn.type = 'button';
+        nextBtn.dataset.testid = 'agy-plus-tour-next';
+        nextBtn.addEventListener('click', nextTourStep);
+
+        actions.append(skipBtn, prevBtn, nextBtn);
+        footer.append(dots, actions);
+
+        tourCard.replaceChildren(header, title, desc, hint, footer);
+        tourCard.hidden = false;
+
+        if (targetRect) {
+            const pad = 6;
+            const vw = Math.max(320, Number(window.innerWidth) || 1280);
+            const vh = Math.max(240, Number(window.innerHeight) || 760);
+            const left = Math.max(4, Math.round(targetRect.left - pad));
+            const top = Math.max(4, Math.round(targetRect.top - pad));
+            const width = Math.max(24, Math.min(vw - left - 4, Math.round(targetRect.width + pad * 2)));
+            const height = Math.max(24, Math.min(vh - top - 4, Math.round(targetRect.height + pad * 2)));
+            tourSpotlight.style.left = `${left}px`;
+            tourSpotlight.style.top = `${top}px`;
+            tourSpotlight.style.width = `${width}px`;
+            tourSpotlight.style.height = `${height}px`;
+            tourSpotlight.hidden = false;
+            tourClickShield.hidden = false;
+            tourBackdrop.hidden = true;
+        } else {
+            tourSpotlight.hidden = true;
+            tourClickShield.hidden = true;
+            tourBackdrop.hidden = false;
+        }
+
+        positionTourCard(targetRect, step);
+    }
+
+    function startTour(stepIndex = 0, options = {}) {
+        if (disposed) return false;
+        clearTimeout(autoTourTimer);
+        autoTourTimer = 0;
+        closeAllPopups();
+        tourActive = true;
+        tourOpenedAutomatically = Boolean(options?.auto);
+        const clamped = Number.isInteger(stepIndex)
+            ? Math.max(0, Math.min(TOUR_STEPS.length - 1, stepIndex))
+            : 0;
+        tourStepIndex = clamped;
+        renderTourStep();
+        return true;
+    }
+
+    function stopTour({ markCompleted = true } = {}) {
+        clearTimeout(autoTourTimer);
+        autoTourTimer = 0;
+        tourActive = false;
+        tourOpenedAutomatically = false;
+        tourBackdrop.hidden = true;
+        tourClickShield.hidden = true;
+        tourSpotlight.hidden = true;
+        tourCard.hidden = true;
+        if (markCompleted) {
+            writeLocalTourCompleted();
+            if (!currentConfig.onboarding?.tourCompleted) {
+                emitConfigPatch({ onboarding: { tourCompleted: true } });
+            }
+        }
+        return true;
+    }
+
+    function nextTourStep() {
+        if (!tourActive || disposed) return false;
+        if (tourStepIndex >= TOUR_STEPS.length - 1) {
+            stopTour({ markCompleted: true });
+            return true;
+        }
+        tourStepIndex += 1;
+        renderTourStep();
+        return true;
+    }
+
+    function prevTourStep() {
+        if (!tourActive || disposed) return false;
+        if (tourStepIndex <= 0) return false;
+        tourStepIndex -= 1;
+        renderTourStep();
+        return true;
+    }
+
+    function repositionTour() {
+        if (!tourActive || disposed) return;
+        const step = TOUR_STEPS[tourStepIndex] || TOUR_STEPS[0];
+        const targetRect = resolveTourTargetRect(step);
+        if (targetRect) {
+            const pad = 6;
+            const vw = Math.max(320, Number(window.innerWidth) || 1280);
+            const vh = Math.max(240, Number(window.innerHeight) || 760);
+            const left = Math.max(4, Math.round(targetRect.left - pad));
+            const top = Math.max(4, Math.round(targetRect.top - pad));
+            const width = Math.max(24, Math.min(vw - left - 4, Math.round(targetRect.width + pad * 2)));
+            const height = Math.max(24, Math.min(vh - top - 4, Math.round(targetRect.height + pad * 2)));
+            tourSpotlight.style.left = `${left}px`;
+            tourSpotlight.style.top = `${top}px`;
+            tourSpotlight.style.width = `${width}px`;
+            tourSpotlight.style.height = `${height}px`;
+        }
+        positionTourCard(targetRect, step);
+    }
+
+    tourBackdrop.addEventListener('click', () => stopTour({ markCompleted: true }));
+    tourClickShield.addEventListener('click', () => stopTour({ markCompleted: true }));
+
+    function scheduleAutoTourIfNeeded() {
+        if (disposed || tourActive || isTourCompleted()) return;
+        clearTimeout(autoTourTimer);
+        autoTourTimer = window.setTimeout(() => {
+            autoTourTimer = 0;
+            if (disposed || tourActive || isTourCompleted()) return;
+            const hasOpenPopup = !panel.hidden || !contextPanel.hidden || !performancePanel.hidden || !settingsPanel.hidden;
+            if (hasOpenPopup) return;
+            const focused = typeof document.hasFocus === 'function' ? document.hasFocus() : true;
+            if (!focused) return;
+            if (!settingsButton.isConnected && !pendingContext.isConnected) return;
+            startTour(0, { auto: true });
+        }, 1400);
+    }
+
     function openSettingsPanel(forceOpen) {
         const opening = typeof forceOpen === 'boolean' ? forceOpen : settingsPanel.hidden;
+        if (tourActive) stopTour({ markCompleted: false });
         closeAllPopups();
         if (!opening) return false;
         renderSettingsPanel();
@@ -2063,6 +2469,26 @@ function installAgyPlusUI(initOptions) {
             } catch {}
             return;
         }
+        if (tourActive) {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                event.stopPropagation();
+                stopTour({ markCompleted: true });
+                return;
+            }
+            if (event.key === 'ArrowRight' || event.key === 'Enter') {
+                event.preventDefault();
+                event.stopPropagation();
+                nextTourStep();
+                return;
+            }
+            if (event.key === 'ArrowLeft') {
+                event.preventDefault();
+                event.stopPropagation();
+                prevTourStep();
+                return;
+            }
+        }
         if (event.key === 'Escape') {
             const hasOpenPopup = !panel.hidden || !contextPanel.hidden || !performancePanel.hidden || !settingsPanel.hidden;
             if (hasOpenPopup) {
@@ -2151,6 +2577,7 @@ function installAgyPlusUI(initOptions) {
         positionPanel(contextPanel, pendingContext);
         positionPanel(performancePanel, performanceBadge);
         positionPanel(settingsPanel, settingsButton, true);
+        repositionTour();
     };
 
     window.addEventListener('resize', reposition);
@@ -2183,6 +2610,10 @@ function installAgyPlusUI(initOptions) {
             return pendingConfigPatches.splice(0, pendingConfigPatches.length);
         },
         openSettingsPanel,
+        startTour,
+        stopTour,
+        nextTourStep,
+        prevTourStep,
         conversationTitle: id => conversationTitles.get(id) || '',
         openConversation,
         submitAskQuestion,
@@ -2237,12 +2668,19 @@ function installAgyPlusUI(initOptions) {
             approvalDiag: {
                 backgroundSubmitReady: Boolean(readAgentContext().agentService),
                 lastPermissionDiag
+            },
+            tour: {
+                active: tourActive,
+                stepIndex: tourStepIndex,
+                totalSteps: TOUR_STEPS.length,
+                completed: isTourCompleted()
             }
         }),
         dispose() {
             disposed = true;
             observer.disconnect();
             clearTimeout(scheduled);
+            clearTimeout(autoTourTimer);
             clearContextHoverTimer();
             clearPerformanceHoverTimer();
             clearInterval(interval);
@@ -2266,6 +2704,10 @@ function installAgyPlusUI(initOptions) {
             panel.remove();
             quotaTooltip.remove();
             settingsPanel.remove();
+            tourBackdrop.remove();
+            tourClickShield.remove();
+            tourSpotlight.remove();
+            tourCard.remove();
             performanceBadge.remove();
             performancePanel.remove();
             themeStyle.remove();
@@ -2277,6 +2719,7 @@ function installAgyPlusUI(initOptions) {
     };
 
     applyConfigInternal(currentConfig, currentRuntimeMeta);
+    scheduleAutoTourIfNeeded();
     void refreshQuota();
     return window.__agyPlusUI.status();
 }

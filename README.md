@@ -228,13 +228,16 @@
 - 点击顶部菜单栏 **`Window -> Antigravity Plus Settings…`**；
 - 按下快捷键 **`Ctrl + Shift + ,`**。
 
-面板内提供全部 15 个独立开关、**「混合加速 / 仅在线 / 仅离线」** 三段式翻译引擎切换器，以及底部的 **「全部开启」 / 「全部关闭（原版模式）」** 一键切换按钮。修改后立即持久化至 `%LOCALAPPDATA%\AntigravityPlus\config.json` 并同步到所有打开的窗口。
+面板内提供全部 15 个独立开关、**「混合加速 / 仅在线 / 仅离线」** 三段式翻译引擎切换器，以及底部的 **「功能导览」 / 「全部开启」 / 「全部关闭（原版模式）」** 按钮。修改后立即持久化至 `%LOCALAPPDATA%\AntigravityPlus\config.json` 并同步到所有打开的窗口。
+
+> **内置分步高亮功能导览**：首次安装打开 Antigravity 时会自动弹出 7 步交互式引导，用聚光灯方框逐步高亮窗口中的每个增强模块（支持 `上一步 / 下一步 / 跳过` 及键盘 `←` `→` `Esc` 操作），看完后自动记住不再打扰；随时可在控制中心底栏点击 **「功能导览」** 或运行 `.\Manage.cmd tour` 重播。
 
 ### 方式 2：交互式终端菜单与命令行（`Manage.cmd`）
 - **交互数字菜单**：直接双击 **`Manage.cmd`**，输入序号 `1`–`15` 即可切换对应功能开关，输入 `M` 切换翻译引擎模式，输入 `P` 修改本地代理地址，输入 `A` / `D` 一键全开或全关。
 - **命令行快捷指令**：
   ```powershell
   .\Manage.cmd status                        # 查看桥接状态与当前窗口注入情况
+  .\Manage.cmd tour                          # 在运行中的客户端内唤起分步高亮功能导览
   .\Manage.cmd config                        # 查看当前完整配置与离线模型探测状态
   .\Manage.cmd disable codexTheme            # 立即关闭 Codex 主题恢复原版配色
   .\Manage.cmd enable codexTheme             # 立即开启 Codex 主题

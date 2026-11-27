@@ -430,3 +430,161 @@ body.agy-plus-context-ring-active [data-testid="context-usage-indicator"] {
     background: var(--agp-muted-bg);
     color: var(--agp-emphasis);
 }
+
+/* ====== Interactive Step-by-Step Feature Tour ====== */
+.agy-plus-tour-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483100;
+    background: rgba(0, 0, 0, 0.56);
+    pointer-events: auto;
+}
+.agy-plus-tour-backdrop[hidden],
+.agy-plus-tour-spotlight[hidden],
+.agy-plus-tour-card[hidden] {
+    display: none !important;
+}
+.agy-plus-tour-spotlight {
+    position: fixed;
+    z-index: 2147483101;
+    border-radius: 10px;
+    border: 2px solid var(--agp-accent);
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.56), 0 0 0 4px rgba(245, 166, 35, 0.2);
+    background: transparent;
+    pointer-events: none;
+    transition: left 200ms ease, top 200ms ease, width 200ms ease, height 200ms ease;
+}
+.agy-plus-tour-click-shield {
+    position: fixed;
+    inset: 0;
+    z-index: 2147483100;
+    background: transparent;
+    pointer-events: auto;
+}
+.agy-plus-tour-click-shield[hidden] {
+    display: none !important;
+}
+.agy-plus-tour-card {
+    position: fixed;
+    z-index: 2147483102;
+    box-sizing: border-box;
+    width: min(372px, calc(100vw - 24px));
+    padding: 16px 18px 14px;
+    border: 1px solid var(--agp-card-border);
+    border-radius: 14px;
+    background: var(--agp-card);
+    color: var(--agp-fg);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    font: 12.5px/1.6 var(--agp-font);
+    transition: left 180ms ease, top 180ms ease;
+}
+.agy-plus-tour-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.agy-plus-tour-step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(245, 166, 35, 0.14);
+    color: var(--agp-accent);
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+.agy-plus-tour-title {
+    margin: 0 0 6px;
+    font-size: 14.5px;
+    font-weight: 600;
+    color: var(--agp-emphasis);
+    line-height: 1.35;
+}
+.agy-plus-tour-desc {
+    margin: 0;
+    font-size: 12.5px;
+    color: var(--agp-secondary);
+    line-height: 1.62;
+}
+.agy-plus-tour-hint {
+    margin: 8px 0 0;
+    padding: 6px 9px;
+    border-radius: 8px;
+    background: var(--agp-muted-bg);
+    color: var(--agp-muted-fg);
+    font-size: 11px;
+    line-height: 1.45;
+}
+.agy-plus-tour-hint[hidden] {
+    display: none !important;
+}
+.agy-plus-tour-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 14px;
+    padding-top: 11px;
+    border-top: 1px solid var(--agp-border);
+}
+.agy-plus-tour-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+.agy-plus-tour-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--agp-ring-track);
+    transition: width 160ms ease, background-color 160ms ease;
+}
+.agy-plus-tour-dot[data-active="true"] {
+    width: 16px;
+    background: var(--agp-accent);
+}
+.agy-plus-tour-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.agy-plus-tour-btn {
+    border: 1px solid var(--agp-border);
+    border-radius: 8px;
+    padding: 5px 11px;
+    background: transparent;
+    color: var(--agp-secondary);
+    font: 12px/1.35 var(--agp-font);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+.agy-plus-tour-btn:hover {
+    background: var(--agp-muted-bg);
+    color: var(--agp-emphasis);
+}
+.agy-plus-tour-btn[hidden] {
+    display: none !important;
+}
+.agy-plus-tour-btn-primary {
+    border-color: var(--agp-accent);
+    background: var(--agp-accent);
+    color: #141210;
+    font-weight: 600;
+}
+.agy-plus-tour-btn-primary:hover {
+    background: #e5991b;
+    border-color: #e5991b;
+    color: #141210;
+}
+@media (prefers-reduced-motion: reduce) {
+    .agy-plus-tour-spotlight,
+    .agy-plus-tour-card,
+    .agy-plus-tour-dot {
+        transition: none !important;
+    }
+}

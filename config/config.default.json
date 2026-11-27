@@ -28,5 +28,8 @@
   "translation": {
     "mode": "hybrid",
     "offlineRoot": ""
+  },
+  "onboarding": {
+    "tourCompleted": false
   }
 }

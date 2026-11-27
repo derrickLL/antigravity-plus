@@ -927,6 +927,22 @@ function install(options) {
             return { ok: true, bridge: 'main-process', runtime: { ...stats } };
         }
 
+        if (action === 'start_tour') {
+            const target = selectHubContents(list, '', true);
+            if (!target) {
+                return { ok: false, error: 'no_hub_window' };
+            }
+            if (msg.bringToFront !== false) {
+                focusContentsWindow(target);
+            }
+            const stepIndex = Number.isInteger(msg.stepIndex) ? msg.stepIndex : 0;
+            const started = await target.executeJavaScript(
+                `Boolean(window.__agyPlusUI?.startTour?.(${stepIndex}))`,
+                false
+            );
+            return { ok: true, started: Boolean(started), bridge: 'main-process' };
+        }
+
         if (action === 'open_conversation') {
             const conversationId = String(msg.conversationId || '');
             if (!toastClient.isValidConversationId(conversationId)) {

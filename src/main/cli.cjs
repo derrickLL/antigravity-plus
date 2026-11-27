@@ -97,13 +97,14 @@ async function main() {
         return;
     }
 
-    if (['status', 'apply', 'remove', 'translate', 'sync'].includes(cmd)) {
+    if (['status', 'apply', 'remove', 'translate', 'sync', 'tour'].includes(cmd)) {
         const actionMap = {
             status: 'status',
             apply: 'apply',
             remove: 'remove',
             translate: 'translate_now',
-            sync: 'sync_now'
+            sync: 'sync_now',
+            tour: 'start_tour'
         };
         try {
             const res = await sendBridgeRequest({ action: actionMap[cmd] }, {
@@ -128,7 +129,7 @@ async function main() {
         }
     }
 
-    throw new Error('Usage: node cli.cjs <status|config|apply|remove|translate|enable|disable|toggle|set-mode|set-proxy|set-browser|set-offline-root> [args]');
+    throw new Error('Usage: node cli.cjs <status|config|apply|remove|translate|tour|enable|disable|toggle|enable-all|disable-all|set-mode|set-proxy|set-browser|set-offline-root> [args]');
 }
 
 main().catch(err => {

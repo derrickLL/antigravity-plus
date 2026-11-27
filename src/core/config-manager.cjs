@@ -34,6 +34,9 @@ const DEFAULT_CONFIG = {
     translation: {
         mode: 'hybrid',
         offlineRoot: ''
+    },
+    onboarding: {
+        tourCompleted: false
     }
 };
 
@@ -109,6 +112,9 @@ function normalizeConfig(raw) {
         translation: {
             mode: validMode,
             offlineRoot: typeof src.translation?.offlineRoot === 'string' ? src.translation.offlineRoot.trim() : ''
+        },
+        onboarding: {
+            tourCompleted: Boolean(src.onboarding?.tourCompleted)
         }
     };
 }
@@ -121,7 +127,8 @@ function mergeConfigPatch(current, patch) {
         features: { ...base.features },
         network: { ...base.network },
         model: { ...base.model },
-        translation: { ...base.translation }
+        translation: { ...base.translation },
+        onboarding: { ...base.onboarding }
     };
 
     if (patch.features && typeof patch.features === 'object') {
@@ -147,6 +154,11 @@ function mergeConfigPatch(current, patch) {
         }
         if (typeof patch.translation.offlineRoot === 'string') {
             next.translation.offlineRoot = patch.translation.offlineRoot.trim();
+        }
+    }
+    if (patch.onboarding && typeof patch.onboarding === 'object') {
+        if (typeof patch.onboarding.tourCompleted === 'boolean') {
+            next.onboarding.tourCompleted = patch.onboarding.tourCompleted;
         }
     }
     return normalizeConfig(next);

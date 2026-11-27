@@ -1082,7 +1082,51 @@ async function runTests() {
                 assert.equal(ctxBtn.hidden, true);
                 assert.equal(ctxPanel.hidden, true);
 
+                // Interactive step-by-step feature tour: replay from settings panel, step navigation, keyboard & completion persistence
+                global.window.__agyPlusUI.openSettingsPanel(true);
+                const replayTourBtn = settingsPanel.querySelector('[data-testid="agy-plus-replay-tour"]');
+                assert.ok(replayTourBtn, 'Settings panel must provide a replay-tour button');
+                replayTourBtn.click();
+                assert.equal(settingsPanel.hidden, true, 'Starting tour must close settings panel');
+                let tourStatus = global.window.__agyPlusUI.status().tour;
+                assert.equal(tourStatus.active, true);
+                assert.equal(tourStatus.stepIndex, 0);
+                assert.equal(tourStatus.totalSteps, 7);
+
+                const tourCard = findAll(body, '#agy-plus-tour-card')[0];
+                const tourSpotlight = findAll(body, '[data-testid="agy-plus-tour-spotlight"]')[0];
+                assert.equal(tourCard.hidden, false);
+                assert.equal(tourSpotlight.hidden, false, 'Step 1 must highlight the settings button with spotlight');
+
+                // Next button & ArrowRight advance steps; ArrowLeft steps back
+                tourCard.querySelector('[data-testid="agy-plus-tour-next"]').click();
+                assert.equal(global.window.__agyPlusUI.status().tour.stepIndex, 1);
+                global.document.dispatchEvent({ type: 'keydown', key: 'ArrowRight', preventDefault() {}, stopPropagation() {} });
+                assert.equal(global.window.__agyPlusUI.status().tour.stepIndex, 2);
+                global.document.dispatchEvent({ type: 'keydown', key: 'ArrowLeft', preventDefault() {}, stopPropagation() {} });
+                assert.equal(global.window.__agyPlusUI.status().tour.stepIndex, 1);
+
+                // Jump to last step and complete -> persists onboarding.tourCompleted = true via bridge
+                global.window.__agyPlusUI.startTour(6);
+                assert.equal(global.window.__agyPlusUI.status().tour.stepIndex, 6);
+                tourCard.querySelector('[data-testid="agy-plus-tour-next"]').click();
+                await new Promise(r => setTimeout(r, 10));
+                assert.equal(global.window.__agyPlusUI.status().tour.active, false);
+                assert.equal(global.window.__agyPlusUI.status().tour.completed, true);
+                assert.equal(tourCard.hidden, true);
+                assert.ok(bridgePatches.some(p => p?.onboarding?.tourCompleted === true), 'Completing tour must persist onboarding.tourCompleted');
+
+                // Replay again and Escape dismisses tour cleanly
+                global.window.__agyPlusUI.startTour(0);
+                assert.equal(global.window.__agyPlusUI.status().tour.active, true);
+                let escStoppedTour = false;
+                global.document.dispatchEvent({ type: 'keydown', key: 'Escape', preventDefault() {}, stopPropagation() { escStoppedTour = true; } });
+                assert.equal(escStoppedTour, true);
+                assert.equal(global.window.__agyPlusUI.status().tour.active, false);
+
                 global.window.__agyPlusUI.dispose();
+                assert.equal(tourCard.isConnected, false, 'dispose() must remove tour card DOM');
+                assert.equal(tourSpotlight.isConnected, false, 'dispose() must remove tour spotlight DOM');
             } finally {
                 global.window = origWin;
                 global.document = origDoc;
@@ -1752,10 +1796,14 @@ async function runTests() {
                 fs.writeFileSync(path.join(offMixedDir, 'user-unrelated.txt'), 'DO_NOT_DELETE', 'utf8');
                 fs.writeFileSync(path.join(offMixedDir, 'my-user-folder', 'data.txt'), 'SAFE', 'utf8');
 
+                const isolatedLocalAppData = path.join(tmpBase, 'isolated-localappdata-s16');
+                fs.mkdirSync(isolatedLocalAppData, { recursive: true });
+                const offUnEnv = { ...cleanEnv, LOCALAPPDATA: isolatedLocalAppData };
+                delete offUnEnv.AGY_PLUS_ROOT;
                 const offUn = cp.spawnSync(psExe, [
                     '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', path.join(siblingOfflineRepo, 'scripts', 'Uninstall.ps1'),
                     '-InstallDir', offMixedDir
-                ], { encoding: 'utf8', env: cleanEnv, windowsHide: true, timeout: 15000 });
+                ], { encoding: 'utf8', env: offUnEnv, windowsHide: true, timeout: 15000 });
                 assert.equal(offUn.status, 0, `Offline uninstall failed: ${offUn.stdout}\n${offUn.stderr}`);
                 assert.equal(fs.existsSync(path.join(offMixedDir, 'deployment.json')), false, 'deployment.json must be removed');
                 assert.equal(fs.existsSync(path.join(offMixedDir, 'venv')), false, 'venv must be removed');
