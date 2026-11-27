@@ -1,28 +1,28 @@
 # Antigravity Plus (`antigravity-plus`)
 
-<p>
-  <img src="https://img.shields.io/badge/Platform-Windows%2010%20%2F%2011%20(x64)-0078D6?style=flat-square&logo=windows" alt="Windows 10/11" />
-  <img src="https://img.shields.io/badge/Architecture-Zero--Loss%20Shim%20V3-4CC38A?style=flat-square" alt="Zero-Loss Shim V3" />
-  <img src="https://img.shields.io/badge/Modules-15%20Hot--Toggleable-F5A623?style=flat-square" alt="15 Modular Features" />
-  <img src="https://img.shields.io/badge/Tests-18%20Suites%20Passed-4CC38A?style=flat-square" alt="18 Suites Passed" />
-  <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="MIT License" />
-</p>
+> `Windows 10 / 11 (x64)` · `0 字节无损 Shim V3` · `15 项模块实时热开关` · `18 套自动化测试通过` · `MIT License`
 
 面向 **Google Antigravity (Windows)** 的模块化增强套件。采用 **0 字节无损原生引导层（Shim V3）** 架构，在不解包或破坏官方 `app.asar` 归档与签名的前提下，一站式集成极简桌面主题、三大实时状态微件、新对话最高旗舰模型自动锁定、鼠标侧键与四向右键手势、`Thinking` 与对话标题流式中文化、右下角无抢焦交互式任务通知 / 一键权限审批，以及进程级网络与外部浏览器路由修复。
 
-> **全部 15 项功能与 3 种翻译模式均支持随时独立开启或关闭**，可视化控制中心毫秒级实时生效，卸载可 100% 无损恢复官方原版。
+**全部 15 项功能与 3 种翻译模式均支持随时独立开启或关闭**，可视化控制中心毫秒级实时生效，卸载可 100% 无损恢复官方原版。
 
 ---
 
-## 一、核心界面与模块预览
+## 一、主窗口全貌与各模块位置预览
 
-> 以下预览均基于仓库真实 CSS/DOM 样式与原生 `TaskToastHost.exe` 实景渲染（使用虚构示例数据）。
+> 以下预览均基于仓库真实 CSS / DOM 结构与原生 `TaskToastHost.exe` 实景渲染（使用虚构示例会话数据，不含真实截屏）。
+
+### 完整窗口模块位置标注（1–9）
+![Antigravity Plus 主窗口模块标注图](./docs/images/window-overview.png)
 
 ### 功能控制中心（全部 15 项模块实时热开关）
 ![Antigravity Plus 功能控制中心](./docs/images/control-center.png)
 
 ### 三大实时状态微件（三色上下文环 · 性能速率胶囊 · 双半环配额）
 ![三大实时状态微件](./docs/images/widgets-real.png)
+
+### Thinking 思考流式中文化与会话标题双语中文化
+![Thinking 与会话标题中文化](./docs/images/translation-real.png)
 
 ### 右下角原生交互通知中心（`TaskToastHost.exe` 实景渲染）
 ![右下角原生交互通知中心](./docs/images/toast-real.png)
