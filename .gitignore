@@ -1,0 +1,16 @@
+node_modules/
+logs/
+cache/
+.tmp/
+backups/
+bin/*.exe
+bin/*.pdb
+src/toast/*.exe
+src/toast/*.pdb
+config.json
+patch_state.json
+runtime_state.json
+settings-before.json
+install-receipt.json
+title-translations-cache.json
+*.log

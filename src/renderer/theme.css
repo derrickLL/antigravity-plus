@@ -1,0 +1,309 @@
+body.agy-plus-codex-ui,
+body.agy-plus-codex-ui[data-agy-font],
+body.agy-plus-codex-ui[data-agy-font] :where(.font-sans) {
+    --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
+    --font-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace !important;
+    --vscode-font-family: var(--font-sans) !important;
+    --editor-font-family: var(--font-mono) !important;
+    --font-weight-light: 300 !important;
+    --font-weight-normal: 400 !important;
+    --font-weight-medium: 500 !important;
+    --font-weight-semibold: 600 !important;
+    --font-weight-bold: 700 !important;
+    --font-weight-black: 800 !important;
+    --agy-gsf-bold-wght: 600 !important;
+    --agy-gsf-fvs: normal !important;
+    font-variation-settings: normal !important;
+    font-variant-ligatures: normal !important;
+}
+body.agy-plus-codex-ui {
+    --background: #ffffff !important;
+    --shell: #f7f7f8 !important;
+    --foreground: #0d0d0d !important;
+    --text-emphasis: #0d0d0d !important;
+    --primary: #0d0d0d !important;
+    --primary-foreground: #ffffff !important;
+    --card: #ffffff !important;
+    --card-border: #dcdce0 !important;
+    --glass: #ffffff !important;
+    --glass-border: #dcdce0 !important;
+    --glass-highlight: transparent !important;
+    --onyx-frame: #ffffff !important;
+    --onyx-raised: #ffffff !important;
+    --onyx-selected: #e4e4e7 !important;
+    --muted: #f2f2f4 !important;
+    --muted-foreground: #6b6b6b !important;
+    --secondary-foreground: #3b3b3b !important;
+    --placeholder: #8f8f8f !important;
+    --border: #e5e5e8 !important;
+    --sidebar: #f7f7f8 !important;
+    --sidebar-muted: #ececee !important;
+    --sidebar-secondary: #e4e4e7 !important;
+    --code-foreground: #0d0d0d !important;
+    --link: #0969da !important;
+    --max-conversation-width: 900px !important;
+    font-family: var(--font-sans) !important;
+    font-weight: 400 !important;
+    color: var(--foreground) !important;
+    background-color: var(--background) !important;
+}
+body.agy-plus-codex-ui:is(.dark, .dark-theme, .theme-dark),
+:root:is(.dark, .dark-theme, .theme-dark) body.agy-plus-codex-ui {
+    --background: #121212 !important;
+    --shell: #0f0f0f !important;
+    --foreground: #f3f3f3 !important;
+    --text-emphasis: #ffffff !important;
+    --primary: #ffffff !important;
+    --primary-foreground: #0d0d0d !important;
+    --card: #1c1c1c !important;
+    --card-border: #303030 !important;
+    --glass: #1c1c1c !important;
+    --glass-border: #303030 !important;
+    --glass-highlight: transparent !important;
+    --onyx-frame: #121212 !important;
+    --onyx-raised: #1c1c1c !important;
+    --onyx-selected: #212121 !important;
+    --muted: #222222 !important;
+    --muted-foreground: #9a9a9a !important;
+    --secondary-foreground: #d4d4d4 !important;
+    --placeholder: #767676 !important;
+    --border: #262626 !important;
+    --sidebar: #0f0f0f !important;
+    --sidebar-muted: #1a1a1a !important;
+    --sidebar-secondary: #212121 !important;
+    --code-foreground: #f5f5f5 !important;
+    --link: #83c3ff !important;
+}
+body.agy-plus-codex-ui,
+body.agy-plus-codex-ui .agy-shell,
+body.agy-plus-codex-ui .agy-layout-vars {
+    --color-background: var(--background) !important;
+    --color-foreground: var(--foreground) !important;
+    --color-primary: var(--primary) !important;
+    --color-primary-foreground: var(--primary-foreground) !important;
+    --color-card: var(--card) !important;
+    --color-card-border: var(--card-border) !important;
+    --color-muted: var(--muted) !important;
+    --color-muted-foreground: var(--muted-foreground) !important;
+    --color-secondary-foreground: var(--secondary-foreground) !important;
+    --color-border: var(--border) !important;
+    --color-sidebar: var(--sidebar) !important;
+    --color-sidebar-muted: var(--sidebar-muted) !important;
+    --color-sidebar-secondary: var(--sidebar-secondary) !important;
+}
+body.agy-plus-codex-ui :where(h1, h2, h3, h4, h5, h6, b, strong, i, em, p, li, td, th, blockquote, a, button, input, textarea, span, div):not(:where(.katex, .katex *, math, math *, .codicon, .google-symbols)) {
+    font-variation-settings: normal !important;
+}
+body.agy-plus-codex-ui .agy-shell,
+body.agy-plus-codex-ui .browser-hole-opaque {
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
+}
+body.agy-plus-codex-ui [data-testid="title-menu-bar"] {
+    background-color: var(--sidebar) !important;
+    color: var(--secondary-foreground) !important;
+    font-weight: 400 !important;
+}
+body.agy-plus-codex-ui .\@container\/titlebar {
+    color: var(--foreground) !important;
+    font-weight: 400 !important;
+}
+body.agy-plus-codex-ui .\@container\/titlebar nav {
+    color: var(--secondary-foreground) !important;
+    font-weight: 400 !important;
+}
+body.agy-plus-codex-ui .\@container\/titlebar nav ol > li:last-child,
+body.agy-plus-codex-ui .\@container\/titlebar nav ol > li:last-child :is(span, a, button, div) {
+    color: var(--text-emphasis) !important;
+    font-weight: 500 !important;
+}
+body.agy-plus-codex-ui [data-testid="conversation-view"] {
+    color: var(--foreground) !important;
+    font-weight: 400;
+}
+body.agy-plus-codex-ui :is([data-agy-plus-prose], [data-testid="agent-response"] .select-text, [data-testid="conversation-view"] .md-divider-spacing) {
+    font-family: var(--font-sans) !important;
+    font-weight: 400 !important;
+    color: var(--foreground) !important;
+}
+body.agy-plus-codex-ui [data-agy-plus-prose="detail"] {
+    color: var(--secondary-foreground) !important;
+}
+body.agy-plus-codex-ui :is([data-agy-plus-prose], [data-testid="agent-response"] .select-text, [data-testid="conversation-view"] .md-divider-spacing) :is(p, li, td, dd, dt, blockquote) {
+    font-family: var(--font-sans) !important;
+    font-weight: 400;
+    color: inherit;
+}
+body.agy-plus-codex-ui :is([data-agy-plus-prose], [data-testid="agent-response"] .select-text, [data-testid="conversation-view"] .md-divider-spacing) :is(strong, b, h1, h2, h3, h4, h5, h6, th) {
+    font-family: var(--font-sans) !important;
+    font-weight: 600 !important;
+    color: var(--text-emphasis) !important;
+}
+body.agy-plus-codex-ui :is([data-agy-plus-prose], [data-testid="agent-response"] .select-text) hr {
+    border-color: var(--border) !important;
+    opacity: 0.8;
+    margin-block: 22px !important;
+}
+body.agy-plus-codex-ui :is([data-agy-plus-prose], [data-testid="agent-response"] .select-text) a {
+    color: var(--link) !important;
+}
+body.agy-plus-codex-ui :is(pre, code, kbd, samp, .font-mono) {
+    font-family: var(--font-mono) !important;
+    font-variation-settings: normal !important;
+}
+body.agy-plus-codex-ui :is([data-agy-plus-prose], [data-testid="agent-response"] .select-text) :is(pre, code) {
+    font-family: var(--font-mono) !important;
+    font-weight: 400 !important;
+    text-shadow: none !important;
+}
+body.agy-plus-codex-ui :is([data-agy-plus-prose], [data-testid="agent-response"] .select-text) pre {
+    box-shadow: none !important;
+    border-color: var(--border) !important;
+    background: var(--card) !important;
+}
+body.agy-plus-codex-ui :is([data-agy-plus-prose], [data-testid="agent-response"] .select-text) :not(pre) > code {
+    padding: 2px 5px !important;
+    border-radius: 5px !important;
+    background: var(--muted) !important;
+    color: var(--code-foreground) !important;
+}
+body.agy-plus-codex-ui [data-testid="conversation-view"] :is([data-testid="worked-for-collapsible"], [data-testid="thinking-collapsible-trigger"]) {
+    font-family: var(--font-sans) !important;
+    font-weight: 400 !important;
+    color: var(--muted-foreground) !important;
+}
+body.agy-plus-codex-ui [data-testid="conversation-view"] :is([data-testid="worked-for-collapsible"], [data-testid="thinking-collapsible-trigger"]):hover span {
+    color: var(--foreground) !important;
+}
+body.agy-plus-codex-ui [data-testid="conversation-view"] .text-muted-foreground {
+    color: var(--muted-foreground) !important;
+}
+body.agy-plus-codex-ui [data-testid="conversation-view"] .text-secondary-foreground {
+    color: var(--secondary-foreground) !important;
+}
+body.agy-plus-codex-ui [data-agy-plus-chat-column] { max-width: min(900px, 100%) !important; }
+body.agy-plus-codex-ui .surface-composer {
+    border: 1px solid var(--card-border) !important;
+    border-radius: 18px !important;
+    padding: 0 !important;
+    background: var(--card) !important;
+    box-shadow: 0 4px 16px #00000014 !important;
+    transition: border-color 150ms ease, box-shadow 150ms ease !important;
+}
+body.agy-plus-codex-ui .surface-composer:focus-within {
+    border-color: var(--muted-foreground) !important;
+    box-shadow: 0 4px 18px #00000020 !important;
+}
+body.agy-plus-codex-ui .surface-composer > .surface-composer-card {
+    padding: 9px 11px 6px !important;
+    border: 0 !important;
+    border-radius: 17px !important;
+    box-shadow: none !important;
+    background: var(--card) !important;
+    backdrop-filter: none !important;
+}
+body.agy-plus-codex-ui [data-testid="agent-input-box"] [contenteditable="true"] {
+    font-family: var(--font-sans) !important;
+    font-size: 15px !important;
+    font-weight: 400 !important;
+    line-height: 1.6 !important;
+    color: var(--text-emphasis) !important;
+}
+body.agy-plus-codex-ui .agy-composer-footer { padding: 5px 0 0 !important; gap: 5px !important; }
+body.agy-plus-codex-ui .agy-composer-footer button:not(.agy-plus-performance-button):not(.agy-plus-icon-btn) {
+    min-height: 28px;
+    font-size: 12px !important;
+    font-weight: 400 !important;
+    color: var(--secondary-foreground) !important;
+}
+body.agy-plus-codex-ui .agy-composer-footer button .opacity-70 {
+    opacity: 0.85 !important;
+}
+body.agy-plus-codex-ui .agy-user-bubble-frame {
+    padding: 0 !important;
+    background: transparent !important;
+}
+body.agy-plus-codex-ui [data-testid="user-message-bubble"],
+body.agy-plus-codex-ui [data-testid="user-message-bubble"] [data-testid="user-message-content"] {
+    border: 0 !important;
+    border-radius: 16px !important;
+    box-shadow: none !important;
+    background: var(--muted) !important;
+    color: var(--text-emphasis) !important;
+    font-family: var(--font-sans) !important;
+    font-weight: 400 !important;
+}
+body.agy-plus-codex-ui .bg-sidebar {
+    color: var(--secondary-foreground) !important;
+    background-color: var(--sidebar) !important;
+    font-weight: 400 !important;
+}
+body.agy-plus-codex-ui .bg-sidebar:has(> [data-testid="sidebar-navigation-items"]),
+body.agy-plus-codex-ui .bg-sidebar:has([data-testid="conversation-list-sidebar"]) {
+    border-inline-end: 1px solid var(--border);
+}
+body.agy-plus-codex-ui .bg-sidebar :is(button, a) {
+    font-family: var(--font-sans) !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
+    line-height: 20px;
+}
+body.agy-plus-codex-ui .bg-sidebar [data-testid="section-header"] h2 {
+    opacity: 1 !important;
+    color: var(--muted-foreground) !important;
+    font-weight: 500 !important;
+}
+body.agy-plus-codex-ui .bg-sidebar .group\/header :is(button, span, div) {
+    color: var(--secondary-foreground) !important;
+    font-weight: 500 !important;
+}
+body.agy-plus-codex-ui .bg-sidebar .agy-sidebar-row {
+    color: var(--secondary-foreground) !important;
+    font-weight: 400 !important;
+    --row-bg: var(--sidebar);
+}
+body.agy-plus-codex-ui .bg-sidebar .agy-sidebar-row .truncate {
+    font-size: 13.5px !important;
+    font-weight: 400 !important;
+    color: inherit !important;
+}
+body.agy-plus-codex-ui .bg-sidebar .agy-sidebar-row:hover {
+    color: var(--text-emphasis) !important;
+    background-color: var(--sidebar-muted) !important;
+    --row-bg: var(--sidebar-muted) !important;
+}
+body.agy-plus-codex-ui .bg-sidebar .agy-sidebar-row:is([data-selected="true"], .bg-sidebar-secondary) {
+    background-color: var(--sidebar-secondary) !important;
+    box-shadow: none !important;
+    color: var(--text-emphasis) !important;
+    --row-bg: var(--sidebar-secondary) !important;
+}
+body.agy-plus-codex-ui .bg-sidebar .agy-sidebar-row:is([data-selected="true"], .bg-sidebar-secondary) .truncate {
+    color: var(--text-emphasis) !important;
+    font-weight: 500 !important;
+}
+body.agy-plus-codex-ui .bg-sidebar .agy-sidebar-row .agy-row-status span {
+    color: var(--muted-foreground) !important;
+    opacity: 1 !important;
+    font-weight: 400 !important;
+}
+body.agy-plus-codex-ui [data-testid="sidebar-navigation-items"] { gap: 4px !important; }
+body.agy-plus-codex-ui [data-testid="sidebar-navigation-items"] > :is(button, a) {
+    height: 32px !important;
+    border-color: transparent !important;
+    border-radius: 8px !important;
+    color: var(--secondary-foreground) !important;
+}
+body.agy-plus-codex-ui [data-testid="sidebar-navigation-items"] > :is(button, a):hover,
+body.agy-plus-codex-ui [data-testid="new-conversation-button"] {
+    color: var(--text-emphasis) !important;
+}
+body.agy-plus-codex-ui [data-testid="sidebar-navigation-items"] svg { width: 16px; height: 16px; }
+body.agy-plus-codex-ui [data-testid="pane-titlebar-toolbar"] { color: var(--secondary-foreground) !important; gap: 3px !important; }
+body.agy-plus-codex-ui [data-testid="pane-titlebar-toolbar"] svg { width: 16px; height: 16px; }
+@media (max-width: 760px) {
+    body.agy-plus-codex-ui .surface-composer > .surface-composer-card { padding: 7px 8px 5px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    body.agy-plus-codex-ui .surface-composer { transition: none !important; }
+}

@@ -1,0 +1,7 @@
+{
+  "name": "task-completion-toast",
+  "displayName": "Antigravity Plus Toast Hook",
+  "version": "1.0.0",
+  "description": "Notifies the Antigravity Plus bottom-right desktop toast center when background or unfocused conversation tasks complete.",
+  "logo": "assets/logo.svg"
+}

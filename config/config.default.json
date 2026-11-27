@@ -1,0 +1,32 @@
+{
+  "features": {
+    "codexTheme": true,
+    "contextRing": true,
+    "performancePill": true,
+    "quotaSplitRing": true,
+    "autoHighestModel": true,
+    "navigationGestures": true,
+    "newWindowMenu": true,
+    "thoughtTranslation": true,
+    "titleTranslation": true,
+    "taskToast": true,
+    "externalBrowser": true,
+    "localProxy": true,
+    "fastpushFix": true,
+    "chineseExecutionRule": true,
+    "workspaceScriptsRule": true
+  },
+  "network": {
+    "proxyUrl": "",
+    "externalBrowserPath": ""
+  },
+  "model": {
+    "strategy": "highest_gemini",
+    "preferredModelHint": "",
+    "preferredEffortHint": ""
+  },
+  "translation": {
+    "mode": "hybrid",
+    "offlineRoot": ""
+  }
+}

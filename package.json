@@ -1,0 +1,25 @@
+{
+  "name": "antigravity-plus",
+  "version": "1.0.0",
+  "description": "All-in-one modular enhancement suite for Google Antigravity on Windows: Codex typography & theme, live context/throughput/quota rings, auto flagship model lock, mouse gestures, multi-window, live thought & title translation, local proxy/Fastpush fix, and bottom-right interactive toast center.",
+  "license": "MIT",
+  "private": false,
+  "homepage": "https://github.com/derrickLL/antigravity-plus#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/derrickLL/antigravity-plus.git"
+  },
+  "bugs": {
+    "url": "https://github.com/derrickLL/antigravity-plus/issues"
+  },
+  "scripts": {
+    "test": "node ./tests/run-all-tests.cjs",
+    "status": "node ./src/main/cli.cjs status",
+    "apply": "node ./src/main/cli.cjs apply",
+    "remove": "node ./src/main/cli.cjs remove",
+    "config": "node ./src/main/cli.cjs config"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
